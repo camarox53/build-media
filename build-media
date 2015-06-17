@@ -1,0 +1,61 @@
+#! /usr/bin/env bash
+
+# Mkdir temp folders 
+mkdir -p /tmp/lvividbuildarea
+mkdir -p /tmp/ramdiskbuildarea
+
+# wget the Kernal
+echo "wgeting the Kernal"
+cd /tmp/lvividbuildarea
+wget http://archive.ubuntu.com/ubuntu/dists/vivid/main/installer-amd64/current/images/netboot/ubuntu-installer/amd64/linux
+
+# wget the ram disk
+echo "wgetting the ramdisk"
+cd /tmp/ramdiskbuildarea
+wget http://archive.ubuntu.com/ubuntu/dists/vivid/main/installer-amd64/current/images/netboot/ubuntu-installer/amd64/initrd.gz
+
+# put other default files in place
+echo "Putting files in build area"
+cp ~/build-media/vividpreseedfiles/* /tmp/lvividbuildarea/
+
+# un gzip the initrd.gz file
+echo "un gzip the ram disk"
+gzip -d /tmp/ramdiskbuildarea/initrd.gz
+
+# un cpio initrd
+echo "extract CPIO archive"
+cd /tmp/ramdiskbuildarea
+cpio -idmv < initrd
+
+# put the preseed in place
+echo "Copy the preseed in place"
+cp ~/build-media/lvividpreseed/preseed.cfg /tmp/ramdiskbuildarea
+
+# cpio it
+echo "CPIO the ramdisk"
+cd /tmp/ramdiskbuildarea
+find . | cpio --create --format='newc' > /tmp/lvividbuildarea/initrd
+
+# gzip it
+echo "Gzip the ramdisk"
+cd /tmp/lvividbuildarea
+gzip initrd
+
+# mkisofs inside files folder
+echo "make the iso"
+cd /tmp/lvividbuildarea
+mkisofs -o "15.04-build.iso" -b "isolinux.bin" -c "boot.cat" --no-emul-boot -boot-load-size 4 -boot-info-table -J -R -V "LOUD Ubuntu Iso" .
+
+# move iso to home
+echo "Moving iso"
+cd /tmp/lvividbuildarea
+mv 15.04-build.iso ~/
+
+# Removing Build Directories
+echo "removing build area"
+cd ~
+rm -rf /tmp/ramdiskbuildarea
+rm -rf /tmp/lvividbuildarea
+
+echo "build area removed"
+echo "Iso has been built"

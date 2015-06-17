@@ -1,0 +1,82 @@
+# English Language
+d-i debian-installer/locale string en_US
+d-i debian-installer/language string en
+d-i debian-installer/country string US
+
+# Keyboard
+d-i console-setup/ask_detect boolean false
+d-i console-setup/layoutcode string us
+
+#Network Configuration
+d-i netcfg/choose_interface select auto
+
+#Mirror information
+d-i mirror/country string manual
+d-i mirror/http/hostname string mirror.lcsee.wvu.edu
+d-i mirror/http/directory string /ubuntu
+d-i mirror/suite string vivid
+d-i apt-setup/security_host string mirror.lcsee.wvu.edu
+d-i apt-setup/security_path string /ubuntu
+
+# Loud User 
+d-i passwd/root-login boolean false
+#d-i passwd/root-password-crypted password !
+d-i passwd/make-user boolean true
+d-i passwd/user-fullname string LOUD
+d-i passwd/username string loud
+d-i passwd/user-password password loud
+d-i passwd/user-password-again password loud
+d-i user-setup/allow-password-weak boolean true
+d-i user-setup/encrypt-home boolean false
+
+# This makes partman automatically partition without confirmation.
+d-i partman-md/confirm boolean true
+d-i partman-partitioning/confirm_write_new_label boolean 
+d-i partman/choose_partition select finish
+d-i partman/confirm boolean true
+d-i partman/confirm_nooverwrite boolean true  
+d-i partman-auto/disk string /dev/sda
+d-i partman-auto/method string regular
+
+#Adding ltrusty repos
+d-i apt-setup/local0/repository string http://loud.lcsee.wvu.edu/stable/ lvivid/
+d-i apt-setup/local0/comment string LOUD Stable
+d-i apt-setup/local0/source boolean true
+d-i apt-setup/local0/key string http://loud.lcsee.wvu.edu/loud/lcsee_repo.gpg
+d-i apt-setup/local1/repository string http://loud.lcsee.wvu.edu/loud/ lvivid-test/
+d-i apt-setup/local1/comment string LOUD Test
+d-i apt-setup/local1/source boolean true
+d-i apt-setup/local1/key string http://loud.lcsee.wvu.edu/loud/lcsee_repo.gpg
+d-i apt-setup/local2/repository string http://loud.lcsee.wvu.edu/stable/ lvivid-internal/
+d-i apt-setup/local2/comment string LOUD Stable
+d-i apt-setup/local2/source boolean true
+d-i apt-setup/local2/key string http://loud.lcsee.wvu.edu/loud/lcsee_repo.gpg
+d-i apt-setup/local3/repository string http://loud.lcsee.wvu.edu/loud/ lvivid-internal-test/
+d-i apt-setup/local3/comment string LOUD Test
+d-i apt-setup/local3/source boolean true
+d-i apt-setup/local3/key string http://loud.lcsee.wvu.edu/loud/lcsee_repo.gpg
+
+#Partitioning
+#d-i partman/default_filesystem string ext4
+
+#Initial packages
+debconf debconf/priority string critical
+d-i debconf/priority string critical  
+tasksel tasksel/first multiselect ubuntu-desktop
+
+#Install auth packages
+d-i pkgsel/include string lcsee-senior-auth
+d-i pkgsel/include string lcsee-sysstaff-auth
+d-i pkgsel/include string openssh-server
+
+preseed preseed/late_command string \
+    in-target deluser --remove-all-files loud || /bin/true;	\
+    rm -rf /target/home/loud/;		       \
+    in-target apt-get update;	    \
+    cp /keys/* /target/etc/ssh/; \
+    chmod 600 /target/etc/ssh/ssh_host*; \
+    chmod a+r /target/etc/ssh/*.pub; 
+
+
+#Reboot when done
+d-i finish-install/reboot_in_progress note
